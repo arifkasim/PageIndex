@@ -147,12 +147,18 @@ You can follow these steps to generate a PageIndex tree from a PDF document.
 pip3 install --upgrade -r requirements.txt
 ```
 
-### 2. Set your OpenAI API key
+### 2. Set your API key
 
-Create a `.env` file in the root directory and add your API key:
+Create a `.env` file in the root directory and add your API key. Multiple LLM providers are supported via [LiteLLM](https://github.com/BerriAI/litellm):
 
 ```bash
-CHATGPT_API_KEY=your_openai_key_here
+# OpenAI
+OPENAI_API_KEY=your_openai_key_here
+
+# Or use other providers:
+ANTHROPIC_API_KEY=your_anthropic_key_here
+GEMINI_API_KEY=your_gemini_key_here
+GROQ_API_KEY=your_groq_key_here
 ```
 
 ### 3. Run PageIndex on your PDF
@@ -167,7 +173,13 @@ python3 run_pageindex.py --pdf_path /path/to/your/document.pdf
 You can customize the processing with additional optional arguments:
 
 ```
---model                 OpenAI model to use (default: gpt-4o-2024-11-20)
+--model                 LLM model to use (default: gpt-4o-2024-11-20)
+                        Supports multiple providers via LiteLLM:
+                        - OpenAI: gpt-4o, gpt-4o-mini
+                        - Anthropic: anthropic/claude-sonnet-4-20250514
+                        - Google: gemini/gemini-2.0-flash
+                        - Groq: groq/llama-3.1-70b-versatile
+                        - Ollama: ollama/llama3.1
 --toc-check-pages       Pages to check for table of contents (default: 20)
 --max-pages-per-node    Max pages per node (default: 10)
 --max-tokens-per-node   Max tokens per node (default: 20000)
@@ -187,6 +199,68 @@ python3 run_pageindex.py --md_path /path/to/your/document.md
 ```
 
 > Note: in this function, we use "#" to determine node heading and their levels. For example, "##" is level 2, "###" is level 3, etc. Make sure your markdown file is formatted correctly. If your Markdown file was converted from a PDF or HTML, we don't recommend using this function, since most existing conversion tools cannot preserve the original hierarchy. Instead, use our [PageIndex OCR](https://pageindex.ai/blog/ocr), which is designed to preserve the original hierarchy, to convert the PDF to a markdown file and then use this function.
+</details>
+
+<details>
+<summary><strong>Python code support</strong></summary>
+<br>
+PageIndex can also parse Python code files or directories into a tree structure, extracting classes, functions, methods, and their relationships.
+
+```bash
+# Parse a single Python file
+python3 run_pageindex.py --code_path /path/to/your/script.py
+
+# Parse an entire Python project directory
+python3 run_pageindex.py --code_path /path/to/your/project/
+```
+
+Example output structure for Python code:
+```jsonc
+{
+  "doc_name": "my_module",
+  "structure": [
+    {
+      "title": "my_module.py",
+      "type": "file",
+      "node_id": "0001",
+      "nodes": [
+        {
+          "title": "MyClass",
+          "type": "class",
+          "node_id": "0002",
+          "docstring": "A sample class.",
+          "nodes": [
+            {
+              "title": "__init__()",
+              "type": "method",
+              "node_id": "0003",
+              "signature": "def __init__(self, value: int)"
+            },
+            {
+              "title": "process()",
+              "type": "method",
+              "node_id": "0004",
+              "signature": "def process(self) -> str"
+            }
+          ]
+        },
+        {
+          "title": "helper_function()",
+          "type": "function",
+          "node_id": "0005",
+          "signature": "def helper_function(data: list) -> dict"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The code parser extracts:
+- **Classes** with their docstrings and decorators
+- **Methods** and **functions** with full signatures (arguments, types, defaults)
+- **Nested structures** (inner classes, nested functions)
+- **Line number ranges** for each element
 </details>
 
 <!-- 
