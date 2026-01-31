@@ -45,7 +45,7 @@ Instead of treating code as flat chunks of text, PageIndex parses the **Abstract
 
 ```bash
 # Clone the repository
-git clone https://github.com/vectify-ai/PageIndex.git
+git clone https://github.com/arifkasim/PageIndex.git
 cd PageIndex
 
 # Install dependencies
