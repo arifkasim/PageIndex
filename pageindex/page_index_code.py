@@ -22,8 +22,14 @@ except ImportError:
         structure_to_list,
         create_clean_structure_for_description,
         generate_doc_description,
+        generate_doc_description,
         ChatGPT_API_async
     )
+
+try:
+    from .page_index_java import build_java_file_tree
+except ImportError:
+    from pageindex.page_index_java import build_java_file_tree
 
 
 def get_python_files(directory: str) -> list:
@@ -217,6 +223,10 @@ def extract_node_text_content(nodes: list, lines: list) -> list:
 
 
 def build_file_tree(file_path: str, model: str = None) -> dict:
+    """Build tree structure for a single Python or Java file."""
+    if file_path.endswith('.java'):
+        return build_java_file_tree(file_path, model)
+        
     """Build tree structure for a single Python file."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -248,7 +258,7 @@ def build_file_tree(file_path: str, model: str = None) -> dict:
 def build_directory_tree(dir_path: str, model: str = None) -> dict:
     """
     Recursively process directory and build unified tree.
-    Returns a tree structure with directories containing files and code nodes.
+    Returns a tree structure with directories containing files and code nodes (Python/Java).
     """
     dir_name = os.path.basename(os.path.normpath(dir_path))
 
@@ -273,22 +283,22 @@ def build_directory_tree(dir_path: str, model: str = None) -> dict:
         item_path = os.path.join(dir_path, item)
 
         # Skip hidden files/directories and common non-source directories
-        if item.startswith('.') or item in ['__pycache__', 'node_modules', 'venv', '.venv', 'env', '.env', '.git']:
+        if item.startswith('.') or item in ['__pycache__', 'node_modules', 'venv', '.venv', 'env', '.env', '.git', 'target', 'build', 'out']:
             continue
 
         if os.path.isdir(item_path):
             subdirs.append(item_path)
-        elif item.endswith('.py'):
+        elif item.endswith(('.py', '.java')):
             files.append(item_path)
 
     # Add subdirectories first
     for subdir_path in subdirs:
         subdir_node = build_directory_tree(subdir_path, model)
-        # Only add if the directory contains Python files (directly or nested)
-        if subdir_node and has_python_content(subdir_node):
+        # Only add if the directory contains code files (directly or nested)
+        if subdir_node and has_code_content(subdir_node):
             dir_node['nodes'].append(subdir_node)
 
-    # Add Python files
+    # Add code files
     for file_path in files:
         file_node = build_file_tree(file_path, model)
         if file_node:
@@ -297,13 +307,13 @@ def build_directory_tree(dir_path: str, model: str = None) -> dict:
     return dir_node
 
 
-def has_python_content(node: dict) -> bool:
-    """Check if a directory node contains any Python files (directly or nested)."""
+def has_code_content(node: dict) -> bool:
+    """Check if a directory node contains any code files (directly or nested)."""
     if node.get('type') == 'file':
         return True
 
     for child in node.get('nodes', []):
-        if has_python_content(child):
+        if has_code_content(child):
             return True
 
     return False
@@ -396,7 +406,7 @@ async def generate_summaries_for_code_structure(structure: dict, summary_token_t
     nodes = structure_to_list([structure] if isinstance(structure, dict) else structure)
 
     # Filter to only code nodes (not directories/files at top level unless they have meaningful content)
-    code_nodes = [n for n in nodes if n.get('type') in ['class', 'function', 'method', 'file']]
+    code_nodes = [n for n in nodes if n.get('type') in ['class', 'function', 'method', 'interface', 'enum', 'file']]
 
     tasks = [get_code_node_summary(node, summary_token_threshold, model) for node in code_nodes]
     summaries = await asyncio.gather(*tasks)
@@ -442,8 +452,8 @@ async def code_to_tree(
 
     # Build the tree structure
     if os.path.isfile(path):
-        if not path.endswith('.py'):
-            raise ValueError("File must be a Python file (.py)")
+        if not path.endswith(('.py', '.java')):
+            raise ValueError("File must be a Python (.py) or Java (.java) file")
         structure = build_file_tree(path, model)
         doc_name = os.path.splitext(os.path.basename(path))[0]
     elif os.path.isdir(path):

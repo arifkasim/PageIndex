@@ -201,8 +201,8 @@ if __name__ == "__main__":
         # Validate Python file or directory
         if not os.path.exists(args.code_path):
             raise ValueError(f"Path not found: {args.code_path}")
-        if os.path.isfile(args.code_path) and not args.code_path.lower().endswith('.py'):
-            raise ValueError("Python file must have .py extension")
+        if os.path.isfile(args.code_path) and not args.code_path.lower().endswith(('.py', '.java')):
+            raise ValueError("File must have .py or .java extension")
 
         # Process Python code
         print('Processing Python code...')
