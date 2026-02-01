@@ -36,6 +36,11 @@ try:
 except ImportError:
     from pageindex.page_index_kotlin import build_kotlin_file_tree
 
+try:
+    from .page_index_cpp import build_cpp_file_tree
+except ImportError:
+    from pageindex.page_index_cpp import build_cpp_file_tree
+
 
 def get_python_files(directory: str) -> list:
     """Recursively find all .py files in a directory."""
@@ -233,6 +238,8 @@ def build_file_tree(file_path: str, model: str = None) -> dict:
         return build_java_file_tree(file_path, model)
     elif file_path.endswith('.kt'):
         return build_kotlin_file_tree(file_path, model)
+    elif file_path.endswith(('.c', '.h', '.cpp', '.hpp', '.cc', '.cxx')):
+        return build_cpp_file_tree(file_path, model)
         
     """Build tree structure for a single Python file."""
     try:
@@ -295,7 +302,7 @@ def build_directory_tree(dir_path: str, model: str = None) -> dict:
 
         if os.path.isdir(item_path):
             subdirs.append(item_path)
-        elif item.endswith(('.py', '.java', '.kt')):
+        elif item.endswith(('.py', '.java', '.kt', '.c', '.h', '.cpp', '.hpp', '.cc', '.cxx')):
             files.append(item_path)
 
     # Add subdirectories first
@@ -459,8 +466,8 @@ async def code_to_tree(
 
     # Build the tree structure
     if os.path.isfile(path):
-        if not path.endswith(('.py', '.java', '.kt')):
-            raise ValueError("File must be a Python (.py), Java (.java), or Kotlin (.kt) file")
+        if not path.endswith(('.py', '.java', '.kt', '.c', '.h', '.cpp', '.hpp', '.cc', '.cxx')):
+            raise ValueError("File extension not supported")
         structure = build_file_tree(path, model)
         doc_name = os.path.splitext(os.path.basename(path))[0]
     elif os.path.isdir(path):

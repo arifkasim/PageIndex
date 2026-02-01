@@ -38,6 +38,7 @@ Instead of treating code as flat chunks of text, PageIndex parses the **Abstract
 | **Python** | `.py` | Built-in `ast` module | Classes, Functions, Decorators, Docstrings |
 | **Java** | `.java` | `javalang` library | Classes, Interfaces, Enums, Methods, Annotations |
 | **Kotlin** | `.kt` | Regex & Brace Counting | Classes, Data Classes, Objects, Functions |
+| **C / C++** | `.c`, `.cpp` | `tree-sitter` | Functions, Structs, Classes, Namespaces |
 
 ---
 
@@ -78,6 +79,9 @@ python3 run_pageindex.py --code_path /path/to/App.java
 
 # Kotlin
 python3 run_pageindex.py --code_path /path/to/Utils.kt
+
+# C / C++
+python3 run_pageindex.py --code_path /path/to/main.cpp
 ```
 
 ---
