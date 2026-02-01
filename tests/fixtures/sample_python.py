@@ -1,4 +1,6 @@
 import functools
+import os
+import sys
 
 def my_decorator(func):
     @functools.wraps(func)

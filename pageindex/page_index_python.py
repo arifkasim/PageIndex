@@ -155,10 +155,38 @@ def extract_nodes_from_python(code_content: str, lines: list) -> list:
         return None
 
     # Process top-level nodes
+    current_imports = []
+    
     for node in tree.body:
-        result = process_node(node)
-        if result:
-            nodes.append(result)
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            current_imports.append(node)
+        else:
+            # If we were collecting imports, save them now
+            if current_imports:
+                import_node = {
+                    'title': 'Imports',
+                    'type': 'imports',
+                    'start_line': current_imports[0].lineno,
+                    'end_line': current_imports[-1].end_lineno if hasattr(current_imports[-1], 'end_lineno') else current_imports[-1].lineno,
+                    'nodes': []
+                }
+                nodes.append(import_node)
+                current_imports = []
+            
+            result = process_node(node)
+            if result:
+                nodes.append(result)
+
+    # Handle trailing imports (rare at top level context if file ends with imports)
+    if current_imports:
+        import_node = {
+            'title': 'Imports',
+            'type': 'imports',
+            'start_line': current_imports[0].lineno,
+            'end_line': current_imports[-1].end_lineno if hasattr(current_imports[-1], 'end_lineno') else current_imports[-1].lineno,
+            'nodes': []
+        }
+        nodes.append(import_node)
 
     return nodes
 

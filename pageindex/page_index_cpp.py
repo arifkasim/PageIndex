@@ -73,13 +73,13 @@ def extract_nodes_from_cpp(code_content: str, lines: list, lang: str = 'cpp') ->
             if name_node:
                 title = name_node.text.decode('utf8')
 
+        elif node_type == 'preproc_include':
+             mapped_type = 'include'
+             title = ts_node.text.decode('utf8').strip()
+
         # If it's a node we care about
         if mapped_type:
             start_line, end_line = get_line_range(ts_node)
-            
-            # Helper to get signature or full text for signature
-            # For now simplified
-            signature = "" 
             
             node_data = {
                 'title': title if title else mapped_type,
@@ -114,12 +114,44 @@ def extract_nodes_from_cpp(code_content: str, lines: list, lang: str = 'cpp') ->
 
     # Process root
     root_nodes = process_node(tree.root_node)
+    
+    # helper list
+    raw_nodes = []
     if isinstance(root_nodes, dict):
-        nodes.append(root_nodes)
+        raw_nodes.append(root_nodes)
     elif isinstance(root_nodes, list):
-        nodes.extend(root_nodes)
-
-    return nodes
+        raw_nodes.extend(root_nodes)
+        
+    # Post-process to group includes
+    final_nodes = []
+    current_includes = []
+    
+    for node in raw_nodes:
+        if node['type'] == 'include':
+            current_includes.append(node)
+        else:
+            if current_includes:
+                # Merge includes
+                final_nodes.append({
+                    'title': 'Imports',
+                    'type': 'imports',
+                    'start_line': current_includes[0]['start_line'],
+                    'end_line': current_includes[-1]['end_line'],
+                    'nodes': [] # Optionally put individual includes here? we'll leave empty for consistency
+                })
+                current_includes = []
+            final_nodes.append(node)
+            
+    if current_includes:
+         final_nodes.append({
+            'title': 'Imports',
+            'type': 'imports',
+            'start_line': current_includes[0]['start_line'],
+            'end_line': current_includes[-1]['end_line'],
+            'nodes': []
+         })
+         
+    return final_nodes
 
 def extract_node_text_content(nodes: list, lines: list) -> list:
     """Add source code text to each node based on line ranges."""

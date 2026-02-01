@@ -17,6 +17,9 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
     # Group 3 is the name
     fun_pattern = re.compile(r'^\s*(private|public|protected|internal|override|suspend|abstract|open|inline)*\s*fun\s+([a-zA-Z0-9_`]+)')
 
+    # Matches: import foo.bar
+    import_pattern = re.compile(r'^\s*import\s+')
+
     # Stack to track current parent node and its indentation/brace depth
     # Each item: {'node': dict, 'brace_count': int}
     stack = []
@@ -24,6 +27,10 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
     # Track brace balance to identify when a node ends
     current_brace_balance = 0
     
+    # Import tracking
+    import_start_line = None
+    import_end_line = None
+
     # Helper to clean text for brace counting (remove strings and comments)
     def count_braces(line):
         # Remove single line comments
@@ -37,8 +44,32 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
         line_num = i + 1
         stripped_line = line.strip()
         
-        # Skip empty lines and full comments for pattern matching, but count braces?
-        # Actually comments might contain braces so we should strip comments before brace counting.
+        # Check for import
+        if import_pattern.match(stripped_line):
+            if import_start_line is None:
+                import_start_line = line_num
+            import_end_line = line_num
+            continue # Imports don't have body braces to track usually
+        elif stripped_line and not stripped_line.startswith('//') and not stripped_line.startswith('package'):
+            # Found non-import code (and not package decl which we ignore/treat as spacer)
+            # If we have pending imports, flush them
+            if import_start_line is not None:
+                 nodes.append({
+                    'title': 'Imports',
+                    'type': 'imports',
+                    'start_line': import_start_line,
+                    'end_line': import_end_line,
+                    'nodes': []
+                 })
+                 import_start_line = None
+                 import_end_line = None
+        
+        # If we are just whitespace or package, we carry on keeping import_start_line active if set?
+        # Actually if we have empty lines between imports, we might want to keep the block open.
+        # But if we have 'package', that breaks import block? Usually package is before imports.
+        # If we have 'package' after imports (weird), it breaks.
+        # Let's assume empty lines extend the block if imports continue. 
+        # But if imports end and we hit class, we flush.
         
         # Brace counting update
         balance_change = count_braces(line)
@@ -143,6 +174,16 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
                 'node': new_node,
                 'start_balance': start_balance
             })
+            
+    # Flush imports if file ends with them
+    if import_start_line is not None:
+         nodes.append({
+            'title': 'Imports',
+            'type': 'imports',
+            'start_line': import_start_line,
+            'end_line': import_end_line,
+            'nodes': []
+         })
 
     return nodes
 

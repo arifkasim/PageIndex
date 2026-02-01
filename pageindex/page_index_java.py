@@ -116,6 +116,26 @@ def extract_nodes_from_java(code_content: str, lines: list) -> list:
 
         return None
 
+    # Process Imports
+    if tree.imports:
+        first_import = tree.imports[0]
+        last_import = tree.imports[-1]
+        
+        start_line = get_line_range(first_import)
+        end_line = get_line_range(last_import)
+        
+        # Javalang position is start, we assume import is 1 line usually.
+        # So end_line is at least that.
+        
+        node_data = {
+            'title': 'Imports',
+            'type': 'imports',
+            'start_line': start_line,
+            'end_line': end_line,
+            'nodes': []
+        }
+        nodes.append(node_data)
+
     # Iterate over types in the compilation unit
     if tree.types:
         for t in tree.types:
