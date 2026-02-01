@@ -1,27 +1,6 @@
-<div align="center">
-  
-<a href="https://vectify.ai/pageindex" target="_blank">
-  <img src="https://github.com/user-attachments/assets/46201e72-675b-43bc-bfbd-081cc6b65a1d" alt="PageIndex Banner" />
-</a>
-
-<br/>
-<br/>
-
-<p align="center">
-  <a href="https://trendshift.io/repositories/14736" target="_blank"><img src="https://trendshift.io/api/badge/repositories/14736" alt="VectifyAI%2FPageIndex | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
-
 # PageIndex: Codebase into Context for AI
 
 <p align="center"><b>Hierarchical Code Indexing&nbsp; ◦ &nbsp;AST-Based Parsing&nbsp; ◦ &nbsp;Multi-Language Support</b></p>
-
-<h4 align="center">
-  <a href="https://vectify.ai">🏠 Homepage</a>&nbsp; • &nbsp;
-  <a href="https://docs.pageindex.ai">📚 Docs</a>&nbsp; • &nbsp;
-  <a href="https://discord.com/invite/VuXuf29EUj">💬 Discord</a>
-</h4>
-  
-</div>
 
 ---
 
@@ -153,10 +132,4 @@ python3 run_pageindex.py --code_path ./src --if-add-node-summary yes
 
 ---
 
-# ⭐ Support Us
 
-Leave us a star 🌟 if you like our project!
-
-<p>
-  <img src="https://github.com/user-attachments/assets/eae4ff38-48ae-4a7c-b19f-eab81201d794" width="80%">
-</p>
