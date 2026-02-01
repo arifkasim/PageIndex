@@ -28,8 +28,8 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
     current_brace_balance = 0
     
     # Import tracking
-    import_start_line = None
-    import_end_line = None
+    # List of tuples: (line_numit, line_text)
+    current_imports = []
 
     # Helper to clean text for brace counting (remove strings and comments)
     def count_braces(line):
@@ -46,23 +46,30 @@ def extract_nodes_from_kotlin(code_content: str, lines: list) -> list:
         
         # Check for import
         if import_pattern.match(stripped_line):
-            if import_start_line is None:
-                import_start_line = line_num
-            import_end_line = line_num
+            current_imports.append((line_num, stripped_line))
             continue # Imports don't have body braces to track usually
         elif stripped_line and not stripped_line.startswith('//') and not stripped_line.startswith('package'):
             # Found non-import code (and not package decl which we ignore/treat as spacer)
             # If we have pending imports, flush them
-            if import_start_line is not None:
+            if current_imports:
+                 import_nodes = []
+                 for imp_line, imp_text in current_imports:
+                     import_nodes.append({
+                         'title': imp_text,
+                         'type': 'import',
+                         'start_line': imp_line,
+                         'end_line': imp_line,
+                         'nodes': []
+                     })
+                     
                  nodes.append({
                     'title': 'Imports',
                     'type': 'imports',
-                    'start_line': import_start_line,
-                    'end_line': import_end_line,
-                    'nodes': []
+                    'start_line': current_imports[0][0],
+                    'end_line': current_imports[-1][0],
+                    'nodes': import_nodes
                  })
-                 import_start_line = None
-                 import_end_line = None
+                 current_imports = []
         
         # If we are just whitespace or package, we carry on keeping import_start_line active if set?
         # Actually if we have empty lines between imports, we might want to keep the block open.

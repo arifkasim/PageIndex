@@ -127,12 +127,29 @@ def extract_nodes_from_java(code_content: str, lines: list) -> list:
         # Javalang position is start, we assume import is 1 line usually.
         # So end_line is at least that.
         
+        import_nodes = []
+        for imp in tree.imports:
+            imp_start = get_line_range(imp)
+            imp_path = imp.path
+            if hasattr(imp, 'static') and imp.static:
+                imp_path = f"static {imp_path}"
+            if hasattr(imp, 'wildcard') and imp.wildcard:
+                imp_path = f"{imp_path}.*"
+                
+            import_nodes.append({
+                'title': f"import {imp_path}",
+                'type': 'import',
+                'start_line': imp_start,
+                'end_line': imp_start, # Javalang doesn't give end
+                'nodes': []
+            })
+
         node_data = {
             'title': 'Imports',
             'type': 'imports',
             'start_line': start_line,
             'end_line': end_line,
-            'nodes': []
+            'nodes': import_nodes
         }
         nodes.append(node_data)
 

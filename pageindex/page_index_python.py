@@ -163,12 +163,22 @@ def extract_nodes_from_python(code_content: str, lines: list) -> list:
         else:
             # If we were collecting imports, save them now
             if current_imports:
+                import_nodes = []
+                for imp in current_imports:
+                    import_nodes.append({
+                        'title': ast.unparse(imp),
+                        'type': 'import',
+                        'start_line': imp.lineno,
+                        'end_line': imp.end_lineno if hasattr(imp, 'end_lineno') else imp.lineno,
+                        'nodes': []
+                    })
+                
                 import_node = {
                     'title': 'Imports',
                     'type': 'imports',
                     'start_line': current_imports[0].lineno,
                     'end_line': current_imports[-1].end_lineno if hasattr(current_imports[-1], 'end_lineno') else current_imports[-1].lineno,
-                    'nodes': []
+                    'nodes': import_nodes
                 }
                 nodes.append(import_node)
                 current_imports = []
@@ -179,12 +189,22 @@ def extract_nodes_from_python(code_content: str, lines: list) -> list:
 
     # Handle trailing imports (rare at top level context if file ends with imports)
     if current_imports:
+        import_nodes = []
+        for imp in current_imports:
+            import_nodes.append({
+                'title': ast.unparse(imp),
+                'type': 'import',
+                'start_line': imp.lineno,
+                'end_line': imp.end_lineno if hasattr(imp, 'end_lineno') else imp.lineno,
+                'nodes': []
+            })
+            
         import_node = {
             'title': 'Imports',
             'type': 'imports',
             'start_line': current_imports[0].lineno,
             'end_line': current_imports[-1].end_lineno if hasattr(current_imports[-1], 'end_lineno') else current_imports[-1].lineno,
-            'nodes': []
+            'nodes': import_nodes
         }
         nodes.append(import_node)
 

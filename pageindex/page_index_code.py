@@ -306,9 +306,6 @@ async def code_to_tree(
         print("Generating summaries...")
         structure = await generate_summaries_for_code_structure(structure, summary_token_threshold, model)
 
-    # Preserve imports text as summary
-    structure = preserve_imports_text(structure)
-
     # Format structure
     structure = format_structure(structure, order=base_order)
 
@@ -358,22 +355,7 @@ def remove_path_from_structure(structure):
     return structure
 
 
-def preserve_imports_text(structure):
-    """Copy text to summary for imports nodes so it survives text removal."""
-    if isinstance(structure, dict):
-        if structure.get('type') == 'imports':
-            # Use prefix_summary to ensure it appears at the top if there were children (though imports usually don't have children)
-            # But strict schema uses 'summary' for leaves. Text can be multiline.
-            structure['summary'] = structure.get('text', '').strip()
-            
-        if 'nodes' in structure:
-            # Recursively process children
-            for child in structure['nodes']:
-                preserve_imports_text(child)
-    elif isinstance(structure, list):
-        for item in structure:
-            preserve_imports_text(item)
-    return structure
+
 
 
 if __name__ == "__main__":

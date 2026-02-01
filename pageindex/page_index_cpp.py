@@ -132,23 +132,41 @@ def extract_nodes_from_cpp(code_content: str, lines: list, lang: str = 'cpp') ->
         else:
             if current_includes:
                 # Merge includes
+                include_nodes = []
+                for inc in current_includes:
+                    # Fix title if needed (it currently has full text)
+                    if not inc['title'].startswith('#include'):
+                         inc['title'] = f"#include {inc['title']}"
+                    # Change type to 'import' for consistency? Or keep 'include'?
+                    # Let's keep 'include' for individual nodes, but 'import' for generic agent search?
+                    # Plan said 'import' type for children nodes.
+                    inc['type'] = 'import' 
+                    include_nodes.append(inc)
+
                 final_nodes.append({
                     'title': 'Imports',
                     'type': 'imports',
                     'start_line': current_includes[0]['start_line'],
                     'end_line': current_includes[-1]['end_line'],
-                    'nodes': [] # Optionally put individual includes here? we'll leave empty for consistency
+                    'nodes': include_nodes
                 })
                 current_includes = []
             final_nodes.append(node)
             
     if current_includes:
+         include_nodes = []
+         for inc in current_includes:
+             if not inc['title'].startswith('#include'):
+                 inc['title'] = f"#include {inc['title']}"
+             inc['type'] = 'import'
+             include_nodes.append(inc)
+             
          final_nodes.append({
             'title': 'Imports',
             'type': 'imports',
             'start_line': current_includes[0]['start_line'],
             'end_line': current_includes[-1]['end_line'],
-            'nodes': []
+            'nodes': include_nodes
          })
          
     return final_nodes
